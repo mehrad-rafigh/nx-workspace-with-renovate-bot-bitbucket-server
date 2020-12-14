@@ -1,0 +1,43 @@
+{
+  "packageRules": [
+    {
+      "packageNames": ["@nrwl/workspace"],
+      "packagePatterns": ["^@nrwl/"],
+      "groupName": "Nrwl workspace",
+      "postUpgradeTasks": {
+        "commands": [
+          "npm i --ignore-scripts",
+          "npx nx migrate @nrwl/workspace",
+          "[ -f migrations.json ] && npx nx migrate --run-migrations=migrations.json"
+        ],
+        "fileFilters": ["**/**"]
+      }
+    },
+    {
+      "packageNames": ["@angular/core"],
+      "packagePatterns": ["^@angular/"],
+      "groupName": "Angular monorepo",
+      "allowedVersions": "< 11",
+      "postUpgradeTasks": {
+        "commands": [
+          "npm i --ignore-scripts",
+          "npx ng update {{{depName}}} --from={{{fromVersion}}} --to={{{toVersion}}} --migrateOnly --allowDirty --force"
+        ],
+        "fileFilters": ["**/**"]
+      }
+    },
+    {
+      "packageNames": ["@nguniversal/express-engine"],
+      "packagePatterns": ["^@nguniversal/"],
+      "groupName": "NgUniversal monorepo",
+      "allowedVersions": "< 11",
+      "postUpgradeTasks": {
+        "commands": [
+          "npm i --ignore-scripts",
+          "npx ng update {{{depName}}} --from={{{fromVersion}}} --to={{{toVersion}}} --migrateOnly --allowDirty --force"
+        ],
+        "fileFilters": ["**/**"]
+      }
+    }
+  ]
+}
