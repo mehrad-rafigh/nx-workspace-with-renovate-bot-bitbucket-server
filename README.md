@@ -1,98 +1,46 @@
-# RenovateNxWorkspaceTest
+# Reproduction
 
-This project was generated using [Nx](https://nx.dev).
+This Repo reproduces the error [here](https://github.com/renovatebot/renovate/issues/7767)
 
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="450"></p>
+Since this [PR](https://github.com/renovatebot/renovate/pull/7632) it is possible to run `ng update` with renovate.
 
-🔎 **Nx is a set of Extensible Dev Tools for Monorepos.**
+This repository is a NX Workspace which is hosted on `bitbucket-server` as `platform`
+`Renovate` will run via a Jenkins cron job
+invoking `docker run --rm -v ${WORKSPACE}/renovate.config.js:/usr/src/app/config.js -e GITHUB_COM_TOKEN=$GITHUB_COM_TOKEN renovate/renovate --password $BITBUCKET_TOKEN`
 
-## Quick Start & Documentation
+Since NX suggest to use `nx migrate` instead of `ng update`.  [See here](https://github.com/nrwl/nx/pull/4238)
+`nx migrate` on the first run creates a `migrations.json` file, which must then be run
+with `nx migrate --run-migrations=migrations.json`
 
-[Nx Documentation](https://nx.dev/angular)
+Not all migration runs create the migrations.json file. That's the reason why I am checking for that file with
+```bash 
+[ -f migrations.json ]
+```
 
-[10-minute video showing all Nx features](https://nx.dev/angular/getting-started/what-is-nx)
+and then running `npx nx migrate --run-migrations=migrations.json`
 
-[Interactive Tutorial](https://nx.dev/angular/tutorial/01-create-application)
+The last step unfortunately does not provide the outcome I wish.
 
-## Adding capabilities to your workspace
+Renovate fails on Jenkins with
 
-Nx supports many plugins which add capabilities for developing different types of applications and different tools.
-
-These capabilities include generating applications, libraries, etc as well as the devtools to test, and build projects as well.
-
-Below are our core plugins:
-
-- [Angular](https://angular.io)
-  - `ng add @nrwl/angular`
-- [React](https://reactjs.org)
-  - `ng add @nrwl/react`
-- Web (no framework frontends)
-  - `ng add @nrwl/web`
-- [Nest](https://nestjs.com)
-  - `ng add @nrwl/nest`
-- [Express](https://expressjs.com)
-  - `ng add @nrwl/express`
-- [Node](https://nodejs.org)
-  - `ng add @nrwl/node`
-
-There are also many [community plugins](https://nx.dev/nx-community) you could add.
-
-## Generate an application
-
-Run `ng g @nrwl/angular:app my-app` to generate an application.
-
-> You can use any of the plugins above to generate applications as well.
-
-When using Nx, you can create multiple applications and libraries in the same workspace.
-
-## Generate a library
-
-Run `ng g @nrwl/angular:lib my-lib` to generate a library.
-
-> You can also use any of the plugins above to generate libraries as well.
-
-Libraries are sharable across libraries and applications. They can be imported from `@renovate-nx-workspace-test/mylib`.
-
-## Development server
-
-Run `ng serve my-app` for a dev server. Navigate to http://localhost:4200/. The app will automatically reload if you change any of the source files.
-
-## Code scaffolding
-
-Run `ng g component my-component --project=my-app` to generate a new component.
-
-## Build
-
-Run `ng build my-app` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test my-app` to execute the unit tests via [Jest](https://jestjs.io).
-
-Run `nx affected:test` to execute the unit tests affected by a change.
-
-## Running end-to-end tests
-
-Run `ng e2e my-app` to execute the end-to-end tests via [Cypress](https://www.cypress.io).
-
-Run `nx affected:e2e` to execute the end-to-end tests affected by a change.
-
-## Understand your workspace
-
-Run `nx dep-graph` to see a diagram of the dependencies of your projects.
-
-## Further help
-
-Visit the [Nx Documentation](https://nx.dev/angular) to learn more.
-
-## ☁ Nx Cloud
-
-### Computation Memoization in the Cloud
-
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-cloud-card.png"></p>
-
-Nx Cloud pairs with Nx in order to enable you to build and test code more rapidly, by up to 10 times. Even teams that are new to Nx can connect to Nx Cloud and start saving time instantly.
-
-Teams using Nx gain the advantage of building full-stack applications with their preferred framework alongside Nx’s advanced code generation and project dependency graph, plus a unified experience for both frontend and backend developers.
-
-Visit [Nx Cloud](https://nx.app/) to learn more.
+```json
+{
+  "name": "renovate",
+  "level": 50,
+  "logContext": "HQ7K2QhP0",
+  "repository": "cg_fe/renovate-nx-workspace-test",
+  "branch": "renovate/major-nrwl-workspace",
+  "dep": "@nrwl/angular",
+  "err": {
+    "killed": false,
+    "code": 1,
+    "signal": null,
+    "cmd": "[ -f migrations.json ] && npx nx migrate --run-migrations=migrations.json",
+    "stdout": "",
+    "stderr": "",
+    "message": "Command failed: [ -f migrations.json ] && npx nx migrate --run-migrations=migrations.json\n",
+    "stack": "Error: Command failed: [ -f migrations.json ] && npx nx migrate --run-migrations=migrations.json\n\n    at ChildProcess.exithandler (child_process.js:308:12)\n    at ChildProcess.emit (events.js:315:20)\n    at ChildProcess.EventEmitter.emit (domain.js:486:12)\n    at maybeClose (internal/child_process.js:1048:16)\n    at Socket.<anonymous> (internal/child_process.js:439:11)\n    at Socket.emit (events.js:315:20)\n    at Socket.EventEmitter.emit (domain.js:486:12)\n    at Pipe.<anonymous> (net.js:673:12)"
+  },
+  "msg": "Error updating branch: Command failed: [ -f migrations.json ] && npx nx migrate --run-migrations=migrations.json\n"
+}
+```
